@@ -14,6 +14,7 @@
 #define LOWER 1
 #define RAISE 2
 #define ADJUST 3
+#define OMARCHY 4
 
 / {
 
@@ -36,13 +37,13 @@
 // |  ESC  |  Q  |  W  |  E   |  R   |  T   |                   |  Y   |  U    |  I    |  O   |   P   | BKSPC |
 // |  TAB  |  A  |  S  |  D   |  F   |  G   |                   |  H   |  J    |  K    |  L   |   ;   |   '   |
 // | SHIFT |  Z  |  X  |  C   |  V   |  B   |  MUTE  |  |       |  N   |  M    |  ,    |  .   |   /   | SHIFT |
-//               | GUI | ALT  | CTRL | LOWER|  ENTER |  | SPACE | RAISE| CTRL  | ALT   | GUI  |
+//               | GUI | ALT  | CTRL | LOWER|  ENTER |  | SPACE | RAISE| CTRL  | ALT   |OMARCHY|
             bindings = <
 &kp GRAVE &kp N1 &kp N2   &kp N3   &kp N4    &kp N5                           &kp N6 &kp N7    &kp N8    &kp N9   &kp N0   &none
 &kp ESC   &kp Q  &kp W    &kp E    &kp R     &kp T                            &kp Y  &kp U     &kp I     &kp O    &kp P    &kp BSPC
 &kp TAB   &kp A  &kp S    &kp D    &kp F     &kp G                            &kp H  &kp J     &kp K     &kp L    &kp SEMI &kp SQT
 &kp LSHFT &kp Z  &kp X    &kp C    &kp V     &kp B      &kp C_MUTE &none      &kp N  &kp M     &kp COMMA &kp DOT  &kp FSLH &kp RSHFT
-                 &kp LGUI &kp LALT &kp LCTRL &mo LOWER  &kp RET    &kp SPACE  &mo RAISE  &kp RCTRL &kp RALT  &kp RGUI
+                 &kp LGUI &kp LALT &kp LCTRL &mo LOWER  &kp RET    &kp SPACE  &mo RAISE  &kp RCTRL &kp RALT  &mo OMARCHY
             >;
 
             sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN &inc_dec_kp C_BRI_UP C_BRI_DN>;
@@ -102,6 +103,27 @@
 &none             &none           &none           &none           &none           &none            &rgb_ug RGB_TOG &none  &none &none &none &none &none &none
                                   &none           &none           &none           &none            &none           &none  &none &none &none &none
             >;
+        };
+
+        omarchy_layer {
+            display-name = "omarchy";
+// Segure o polegar direito mais externo. Todos os atalhos usam SUPER.
+// Segurar SHIFT junto: numero = mover janela p/ workspace, setas = trocar janela de lugar.
+// ---------------------------------------------------------------------------------------------------------------------
+// | QUAKE  |  WS1  |  WS2   |  WS3   |  WS4    |  WS5   |                    |  WS6   |  WS7   |  WS8   |  WS9   |  WS10  |         |
+// | SYSMNU | CLOSE | FULLSC | FLOAT  | SPLIT   | GROUP  |                    | MENU   | APPS   | FOC UP | KEYS   | CAPTURE| TRANSP  |
+// | WS ANT | WS <  | WS >   | SCRATCH| CLIPBRD | EMOJI  |                    | TERM   | FOC <  | FOC DN | FOC >  | BROWSER| FILES   |
+// | SHIFT  | PRINT | RECORD | COLOR  | NOTIF   | LOCK   | MUTE |  |          | MINIMIZ| AUDIO  | BLUETH | NETWORK| DISPLAY| SHIFT   |
+//                  |        |        |         |        | TERM |  |          |        |        |        | (hold) |
+            bindings = <
+&kp LG(GRAVE)    &kp LG(N1)    &kp LG(N2)     &kp LG(N3)     &kp LG(N4)     &kp LG(N5)                                &kp LG(N6)     &kp LG(N7)      &kp LG(N8)       &kp LG(N9)      &kp LG(N0)       &none
+&kp LG(ESC)      &kp LG(W)     &kp LG(F)      &kp LG(T)      &kp LG(J)      &kp LG(G)                                 &kp LG(SPACE)  &kp LA(LG(SPACE)) &kp LG(UP)     &kp LG(K)       &kp LC(LG(C))    &kp LG(BSPC)
+&kp LC(LG(TAB))  &kp LS(LG(TAB)) &kp LG(TAB)  &kp LG(S)      &kp LC(LG(V))  &kp LC(LG(E))                             &kp LG(RET)    &kp LG(LEFT)    &kp LG(DOWN)     &kp LG(RIGHT)   &kp LS(LG(RET))  &kp LS(LG(F))
+&kp LSHFT        &kp PSCRN     &kp LA(PSCRN)  &kp LG(PSCRN)  &kp LG(COMMA)  &kp LC(LG(L))  &kp C_MUTE   &none        &kp LG(M)      &kp LC(LG(A))   &kp LC(LG(B))    &kp LC(LG(N))   &kp LC(LG(D))    &kp RSHFT
+                               &trans         &trans         &trans         &none          &kp LG(RET)  &trans       &trans         &trans          &trans           &trans
+            >;
+
+            sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN &inc_dec_kp C_BRI_UP C_BRI_DN>;
         };
 
     };
