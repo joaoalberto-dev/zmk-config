@@ -15,3 +15,6 @@ Todo push dispara o GitHub Actions. Baixe o artefato `firmware` na aba **Actions
 ## Editar o layout
 - No arquivo `config/sofle.keymap`, ou
 - No **ZMK Studio** (https://zmk.studio) com a esquerda no USB. Para destravar: segure LOWER + RAISE e aperte TAB.
+
+## Mapa das camadas
+https://joaoalberto-dev.github.io/zmk-config/ (arquivo em `docs/index.html`)

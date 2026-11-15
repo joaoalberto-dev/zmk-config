@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mapa do Sofle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; }
+/* Layout: cabeçalho curto, abas de camada, as duas metades lado a lado em escala real de teclas (1u), notas abaixo */
+:root {
+  --bg: #eef0f3;
+  --panel: #ffffff;
+  --fg: #1c2230;
+  --muted: #5f6878;
+  --line: #d6dae2;
+  --cap: #fbfcfd;
+  --cap-edge: #c9ced8;
+  --cap-shadow: #b7bdc9;
+  --ghost: #a3aab7;
+  --base: #2b3445;
+  --lower: #2f63d0;
+  --raise: #11865a;
+  --adjust: #c2410c;
+  --omarchy: #7a4fe0;
+  --font-display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-key: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --u: 56px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12151c; --panel: #1a1f29; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2c3341;
+    --cap: #242a36; --cap-edge: #343c4c; --cap-shadow: #0b0d12; --ghost: #5d6575;
+    --base: #c9d1de; --lower: #6f9bff; --raise: #3fcf96; --adjust: #ff8a4c; --omarchy: #a98bff;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12151c; --panel: #1a1f29; --fg: #e6e9ef; --muted: #9aa3b3; --line: #2c3341;
+  --cap: #242a36; --cap-edge: #343c4c; --cap-shadow: #0b0d12; --ghost: #5d6575;
+  --base: #c9d1de; --lower: #6f9bff; --raise: #3fcf96; --adjust: #ff8a4c; --omarchy: #a98bff;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 40px;
+}
+.wrap { max-width: 1040px; margin: 0 auto; display: grid; gap: 22px; }
+header { display: grid; gap: 4px; }
+h1 { font-family: var(--font-display); font-weight: 700; font-size: 30px; letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
+.sub { color: var(--muted); margin: 0; max-width: 68ch; }
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.tab {
+  --c: var(--base);
+  font: 600 14px var(--font-body); color: var(--fg); background: var(--panel);
+  border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px 7px 10px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.tab .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c); }
+.tab kbd { font: 500 11px var(--font-key); color: var(--muted); }
+.tab[aria-selected="true"] { border-color: var(--c); box-shadow: inset 0 0 0 1px var(--c); }
+.tab:focus-visible, .tab:hover { outline: none; border-color: var(--c); }
+.board { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px 0 14px; }
+.how { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; padding: 0 20px 12px; }
+.how strong { font-family: var(--font-display); font-size: 19px; color: var(--c); }
+.how span { color: var(--muted); }
+.scroller { overflow-x: auto; padding: 4px 20px 6px; }
+.halves { display: flex; gap: calc(var(--u) * 1.3); width: max-content; margin: 0 auto; }
+.half { position: relative; width: calc(var(--u) * 7); height: calc(var(--u) * 7); }
+.half-label { position: absolute; top: calc(var(--u) * -0.05); font: 600 10px var(--font-body); letter-spacing: .12em; text-transform: uppercase; color: var(--ghost); }
+.key {
+  position: absolute; width: calc(var(--u) - 6px); height: calc(var(--u) - 6px);
+  background: var(--cap); border: 1px solid var(--cap-edge); border-radius: 8px;
+  box-shadow: 0 2px 0 var(--cap-shadow);
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  font: 500 13px/1.1 var(--font-key); color: var(--fg); padding: 3px; overflow-wrap: anywhere; hyphens: auto;
+}
+.key.long { font-size: 10px; font-family: var(--font-body); font-weight: 600; }
+.key.ghost { color: var(--ghost); }
+.key.none { background: transparent; box-shadow: none; border-style: dashed; }
+.key.act { color: var(--c); border-color: var(--c); box-shadow: 0 2px 0 var(--c); font-weight: 700; }
+.key.hold { background: var(--c); color: var(--panel); border-color: var(--c); box-shadow: 0 2px 0 var(--c); font-weight: 700; }
+.knob {
+  position: absolute; width: calc(var(--u) * 0.95); height: calc(var(--u) * 0.95); border-radius: 50%;
+  border: 2px solid var(--cap-edge); background: repeating-conic-gradient(var(--cap) 0 8deg, var(--line) 8deg 10deg);
+  display: grid; place-items: center; text-align: center;
+}
+.knob b { font: 700 10px/1.1 var(--font-body); background: var(--panel); padding: 2px 4px; border-radius: 4px; }
+.knob small { position: absolute; top: calc(100% + 4px); left: 50%; transform: translateX(-50%); white-space: nowrap; font: 500 10.5px var(--font-body); color: var(--muted); }
+.key.pressed, .knob.pressed { outline: 3px solid var(--c); outline-offset: 2px; box-shadow: none; }
+.key.pressed:not(.hold) { background: var(--c); color: var(--panel); border-color: var(--c); }
+.readout { padding: 12px 20px 0; font-size: 14px; color: var(--muted); min-height: 2.6em; }
+.readout b { font: 700 17px var(--font-key); color: var(--c); }
+.readout b.base { color: var(--fg); }
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.note { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; min-width: 0; }
+.note h2 { font: 700 15px var(--font-display); margin: 0 0 6px; }
+.note p, .note ul { margin: 0; color: var(--muted); font-size: 14px; }
+.note ul { padding-left: 18px; display: grid; gap: 3px; }
+.note b { color: var(--fg); font-weight: 600; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; padding: 10px 20px 0; font-size: 12.5px; color: var(--muted); }
+.legend i { display: inline-block; width: 18px; height: 14px; border-radius: 4px; vertical-align: -2px; margin-right: 6px; border: 1px solid var(--cap-edge); background: var(--cap); }
+.legend i.h { background: var(--c); border-color: var(--c); }
+.legend i.g { color: var(--ghost); }
+.legend i.n { background: transparent; border-style: dashed; }
+footer { color: var(--muted); font-size: 12.5px; }
+footer code { font-family: var(--font-key); font-size: 12px; }
+@media (max-width: 640px) { :root { --u: 48px; } h1 { font-size: 25px; } }
+@media (prefers-reduced-motion: no-preference) { .key { transition: background .15s, color .15s, border-color .15s; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Mapa do Sofle</h1>
+    <p class="sub">As cinco camadas do seu teclado, tiradas do <code>config/sofle.keymap</code>. Teclas em cinza claro herdam o que está na camada principal; tracejadas não fazem nada.</p>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Camadas" id="tabs"></nav>
+
+  <section class="board" id="board" aria-live="polite">
+    <div class="how" id="how"></div>
+    <div class="scroller">
+      <div class="halves">
+        <div class="half" id="L"><span class="half-label" style="left:0">Esquerda</span></div>
+        <div class="half" id="R"><span class="half-label" style="right:0">Direita</span></div>
+      </div>
+    </div>
+    <div class="legend">
+      <span><i class="h"></i>segure para ativar</span>
+      <span><i></i>tecla desta camada</span>
+      <span><i class="g"></i><span style="color:var(--ghost)">cinza</span>: igual à principal</span>
+      <span><i class="n"></i>sem função</span>
+    </div>
+    <div class="readout" id="readout">Clique na página e aperte qualquer tecla do Sofle.</div>
+  </section>
+
+  <section class="notes">
+    <div class="note">
+      <h2>Knobs</h2>
+      <p><b>Esquerdo:</b> girar muda o volume, clicar liga/desliga o mudo.<br><b>Direito:</b> girar muda o brilho da tela. Valem em todas as camadas.</p>
+    </div>
+    <div class="note">
+      <h2>Ordem para aprender</h2>
+      <ul>
+        <li><b>Semana 1:</b> só a Principal</li>
+        <li><b>Semana 2:</b> Lower (números e símbolos)</li>
+        <li><b>Semana 3:</b> Raise (setas e edição)</li>
+        <li><b>Depois:</b> Omarchy</li>
+      </ul>
+    </div>
+    <div class="note">
+      <h2>Bluetooth</h2>
+      <p>Na <b>Raise</b>, a fileira de números escolhe o perfil (<b>BT 1</b> a <b>BT 5</b>, um por computador). <b>BT limpar</b> apaga o pareamento do perfil atual.</p>
+    </div>
+  </section>
+
+  <footer>Gerado a partir de <code>joaoalberto-dev/zmk-config</code>, commit <code>ea0fc31</code>. As teclas de camada (LOWER, RAISE, OMARCHY) não enviam nada ao computador, e atalhos com Super são capturados pelo Hyprland, por isso não aparecem aqui.</footer>
+</div>
+
+<script>
+// "~" = herda da principal, "" = sem função, "*X" = segure para ativar
+const N6 = ["", "", "", "", "", ""], T6 = ["~", "~", "~", "~", "~", "~"], T5 = ["~", "~", "~", "~", "~"], N5 = ["", "", "", "", ""];
+const LAYERS = [
+  { id: "principal", name: "Principal", color: "--base", how: "Camada normal", hint: "Letras, números e modificadores. Enter no polegar esquerdo, espaço no direito.",
+    L: [["`","1","2","3","4","5"],["Esc","Q","W","E","R","T"],["Tab","A","S","D","F","G"],["Shift","Z","X","C","V","B"]], Lenc: "Mudo",
+    Lth: ["Super","Alt","Ctrl","LOWER","Enter"],
+    R: [["6","7","8","9","0",""],["Y","U","I","O","P","⌫"],["H","J","K","L",";","'"],["N","M",",",".","/","Shift"]], Renc: "",
+    Rth: ["Espaço","RAISE","Ctrl","Alt","OMARCHY"] },
+  { id: "lower", name: "Lower", color: "--lower", how: "Segure LOWER", hint: "Números, símbolos e F1–F12.",
+    L: [["~","F1","F2","F3","F4","F5"],["`","1","2","3","4","5"],["~","!","@","#","$","%"],["~","=","-","+","{","}"]], Lenc: "~",
+    Lth: ["~","~","~","*LOWER","~"],
+    R: [["F6","F7","F8","F9","F10","F11"],["6","7","8","9","0","F12"],["^","&","*","(",")","|"],["[","]",";",":","\\","~"]], Renc: "~",
+    Rth: T5 },
+  { id: "raise", name: "Raise", color: "--raise", how: "Segure RAISE", hint: "Setas em I J K L, PgUp/PgDn, Delete, Bluetooth na fileira de cima.",
+    L: [["BT limpar","BT 1","BT 2","BT 3","BT 4","BT 5"],["~","Ins","PrtSc","Menu","~","~"],["~","Alt","Ctrl","Shift","~","Caps"],["~","Desfazer","Recortar","Copiar","Colar","~"]], Lenc: "~",
+    Lth: T5,
+    R: [T6,["PgUp","~","↑","~","~","~"],["PgDn","←","↓","→","Del","⌫"],T6], Renc: "~",
+    Rth: ["~","*RAISE","~","~","~"] },
+  { id: "adjust", name: "Adjust", color: "--adjust", how: "Segure LOWER + RAISE", hint: "Configurações do teclado. As teclas de RGB foram omitidas porque seu Sofle não tem LEDs.",
+    L: [["BT limpar","BT 1","BT 2","BT 3","BT 4","BT 5"],["Tela on/off","","","","",""],["Destravar Studio","","","","",""],N6], Lenc: "",
+    Lth: ["","","","*LOWER",""],
+    R: [N6,N6,N6,N6], Renc: "",
+    Rth: ["","*RAISE","","",""] },
+  { id: "omarchy", name: "Omarchy", color: "--omarchy", how: "Segure OMARCHY (polegar direito, o de fora)", hint: "Atalhos do Hyprland. Com Shift junto: número move a janela para o workspace, J/K/L/I trocam a janela de lugar.",
+    L: [["Quake","WS 1","WS 2","WS 3","WS 4","WS 5"],["Menu sistema","Fechar","Tela cheia","Flutuar","Split","Agrupar"],["WS anterior","◀ WS","WS ▶","Scratch-pad","Clipboard","Emojis"],["Shift","Print","Gravar tela","Conta-gotas","Notificação","Bloquear"]], Lenc: "Mudo",
+    Lth: ["~","~","~","","Terminal"],
+    R: [["WS 6","WS 7","WS 8","WS 9","WS 10",""],["Menu Omarchy","Apps","Foco ↑","Atalhos","Captura","Transpa-rência"],["Terminal","Foco ←","Foco ↓","Foco →","Navega-dor","Arquivos"],["Minimizar","Áudio","Blue-tooth","Rede","Monitores","Shift"]], Renc: "",
+    Rth: ["~","~","~","~","*OMARCHY"] },
+];
+const BASE = LAYERS[0];
+
+// Geometria aproximada do Sofle: deslocamento vertical por coluna (de fora para dentro), em unidades de tecla
+// Medido a partir da foto do teclado: mindinhos bem mais baixos, coluna externa com uma 5ª tecla (polegar de fora)
+const STAGGER = [1.45, 1.25, 0.45, 0, 0.08, 0.1];
+const THUMB = [{x:0,y:5.85,r:0},{x:2.2,y:4.9,r:0},{x:3.4,y:4.65,r:0},{x:4.55,y:4.7,r:0},{x:5.75,y:4.75,r:15}];
+const KNOB = { x: 6.0, y: 3.05 };
+const W = 7.0;
+
+function cell(label, baseLabel) {
+  if (label === "~") return { text: baseLabel, cls: "ghost" };
+  if (label === "") return { text: "", cls: "none" };
+  if (label.startsWith("*")) return { text: label.slice(1), cls: "hold" };
+  return { text: label, cls: "act" };
+}
+function keyEl(c, x, y, r, id) {
+  const d = document.createElement("div");
+  d.dataset.pos = id;
+  const soft = c.text.replace(/(\p{L})-(\p{L})/gu, "$1­$2");
+  d.className = "key " + c.cls + (soft.replace(/­/g, "").length > 4 ? " long" : "");
+  d.textContent = soft;
+  d.style.left = `calc(var(--u) * ${x} + 3px)`;
+  d.style.top = `calc(var(--u) * ${y} + 3px)`;
+  if (r) d.style.transform = `rotate(${r}deg)`;
+  return d;
+}
+function drawHalf(root, side, layer) {
+  root.querySelectorAll(".key,.knob").forEach(e => e.remove());
+  const rows = layer[side], base = BASE[side];
+  const mirror = x => side === "L" ? x : W - x - 1;
+  for (let r = 0; r < 4; r++) for (let c = 0; c < 6; c++) {
+    const outer = side === "L" ? c : 5 - c;      // índice a partir da borda externa
+    const x = side === "L" ? c : W - 1 - outer;
+    root.appendChild(keyEl(cell(rows[r][c], base[r][c]), x, r + 0.35 + STAGGER[outer], 0, `${side}-${r}-${c}`));
+  }
+  const th = layer[side + "th"], bth = BASE[side + "th"];
+  for (let i = 0; i < 5; i++) {
+    const idx = side === "L" ? i : 4 - i;          // direita: lista vai de dentro para fora
+    const p = THUMB[idx];
+    const label = th[i];
+    root.appendChild(keyEl(cell(label, bth[i]), mirror(p.x), p.y, side === "L" ? p.r : -p.r, `${side}-t-${i}`));
+  }
+  const k = document.createElement("div");
+  k.className = "knob";
+  k.dataset.pos = side + "-k";
+  k.style.left = `calc(var(--u) * ${mirror(KNOB.x) + 0.025})`;
+  k.style.top = `calc(var(--u) * ${KNOB.y})`;
+  const press = cell(layer[side + "enc"], BASE[side + "enc"]).text;
+  k.innerHTML = `<b>${side === "L" ? "Volume" : "Brilho"}</b><small>${press ? "clique: " + press : "clique: —"}</small>`;
+  root.appendChild(k);
+}
+
+const tabs = document.getElementById("tabs"), board = document.getElementById("board"), how = document.getElementById("how");
+let current = 0;
+function show(i) {
+  current = i;
+  const layer = LAYERS[i];
+  board.style.setProperty("--c", `var(${layer.color})`);
+  how.innerHTML = `<strong>${layer.name}</strong><span><b style="color:var(--fg)">${layer.how}.</b> ${layer.hint}</span>`;
+  drawHalf(document.getElementById("L"), "L", layer);
+  drawHalf(document.getElementById("R"), "R", layer);
+  [...tabs.children].forEach((t, j) => { t.setAttribute("aria-selected", String(j === i)); t.tabIndex = j === i ? 0 : -1; });
+  try { localStorage.setItem("sofle-layer", String(i)); } catch (e) {}
+}
+LAYERS.forEach((l, i) => {
+  const b = document.createElement("button");
+  b.className = "tab"; b.id = "tab-" + l.id; b.setAttribute("role", "tab");
+  b.style.setProperty("--c", `var(${l.color})`);
+  b.innerHTML = `<span class="dot"></span>${l.name}`;
+  b.addEventListener("click", () => show(i));
+  tabs.appendChild(b);
+});
+// --- Teclas ao vivo: o ZMK envia códigos US, então casamos por e.code (+ Shift), independente do layout do sistema
+const SIDE = { L: "Left", R: "Right" };
+const MODS = { "Shift": "Shift", "Ctrl": "Control", "Alt": "Alt", "Super": "Meta" };
+const FIXED = {
+  "`": ["Backquote"], "Esc": ["Escape"], "Tab": ["Tab"], "⌫": ["Backspace"], ";": ["Semicolon"], "'": ["Quote"],
+  ",": ["Comma"], ".": ["Period"], "/": ["Slash"], "Enter": ["Enter"], "Espaço": ["Space"],
+  "!": ["Digit1", 1], "@": ["Digit2", 1], "#": ["Digit3", 1], "$": ["Digit4", 1], "%": ["Digit5", 1],
+  "^": ["Digit6", 1], "&": ["Digit7", 1], "*": ["Digit8", 1], "(": ["Digit9", 1], ")": ["Digit0", 1],
+  "=": ["Equal"], "-": ["Minus"], "+": ["Equal", 1], "{": ["BracketLeft", 1], "}": ["BracketRight", 1],
+  "[": ["BracketLeft"], "]": ["BracketRight"], ":": ["Semicolon", 1], "\\": ["Backslash"], "|": ["Backslash", 1],
+  "Ins": ["Insert"], "PrtSc": ["PrintScreen"], "Menu": ["ContextMenu"], "Caps": ["CapsLock"],
+  "Desfazer": ["Undo"], "Recortar": ["Cut"], "Copiar": ["Copy"], "Colar": ["Paste"],
+  "PgUp": ["PageUp"], "PgDn": ["PageDown"], "↑": ["ArrowUp"], "↓": ["ArrowDown"], "←": ["ArrowLeft"], "→": ["ArrowRight"], "Del": ["Delete"]
+};
+function sigOf(label, side) {
+  if (/^[A-Z]$/.test(label)) return { code: "Key" + label, shift: false };
+  if (/^[0-9]$/.test(label)) return { code: "Digit" + label, shift: false };
+  if (/^F\d+$/.test(label)) return { code: label, shift: false };
+  if (MODS[label]) return { code: MODS[label] + SIDE[side], mod: true };
+  const f = FIXED[label];
+  return f ? { code: f[0], shift: !!f[1] } : null;
+}
+function positions(layer) {
+  const out = [];
+  for (const side of ["L", "R"]) {
+    for (let r = 0; r < 4; r++) for (let c = 0; c < 6; c++) out.push({ id: `${side}-${r}-${c}`, side, label: layer[side][r][c], base: BASE[side][r][c] });
+    for (let i = 0; i < 5; i++) out.push({ id: `${side}-t-${i}`, side, label: layer[side + "th"][i], base: BASE[side + "th"][i] });
+  }
+  return out;
+}
+function match(li, code, shift, exact) {
+  for (const p of positions(LAYERS[li])) {
+    if (p.label === "") continue;
+    const shown = p.label === "~" ? p.base : p.label.replace(/^\*/, "");
+    const s = sigOf(shown, p.side);
+    if (s && s.code === code && (s.mod || !exact || s.shift === shift)) return { ...p, shown, ghost: p.label === "~" };
+  }
+  return null;
+}
+const readout = document.getElementById("readout");
+const held = new Map();
+function flash(id) {
+  const el = document.querySelector(`[data-pos="${id}"]`);
+  if (!el) return;
+  el.classList.add("pressed");
+  setTimeout(() => el.classList.remove("pressed"), 220);
+}
+document.addEventListener("keydown", e => {
+  const code = e.code, sh = e.shiftKey;
+  if (code === "AudioVolumeUp" || code === "AudioVolumeDown" || code === "AudioVolumeMute") {
+    flash("L-k"); readout.innerHTML = `<b>${code === "AudioVolumeMute" ? "Mudo" : "Volume"}</b> knob esquerdo`; return;
+  }
+  if (code === "BrightnessUp" || code === "BrightnessDown") { flash("R-k"); readout.innerHTML = "<b>Brilho</b> knob direito"; return; }
+  const others = LAYERS.map((_, i) => i).filter(i => i !== current);
+  let li = current;
+  let hit = match(current, code, sh, true) || match(current, code, sh, false);
+  if (!hit) for (const i of others) { hit = match(i, code, sh, true); if (hit) { li = i; break; } }
+  if (!hit) for (const i of others) { hit = match(i, code, sh, false); if (hit) { li = i; break; } }
+  if (!hit) { readout.innerHTML = `<b>${e.key === " " ? "Espaço" : e.key}</b> não está neste mapa`; return; }
+  if (!e.ctrlKey && !e.metaKey) e.preventDefault();
+  if (li !== current) show(li);
+  const el = document.querySelector(`[data-pos="${hit.id}"]`);
+  if (el) el.classList.add("pressed");
+  held.set(code, hit.id);
+  const l = LAYERS[li];
+  readout.innerHTML = (li === 0 || hit.ghost || hit.label.startsWith("*"))
+    ? `<b>${hit.shown}</b>`
+    : `<b>${hit.shown}</b> = ${l.how.toLowerCase()} e aperte <b class="base">${hit.base}</b>`;
+});
+document.addEventListener("keyup", e => {
+  const id = held.get(e.code);
+  if (!id) return;
+  held.delete(e.code);
+  const el = document.querySelector(`[data-pos="${id}"]`);
+  if (el) el.classList.remove("pressed");
+});
+window.addEventListener("blur", () => { held.clear(); document.querySelectorAll(".pressed").forEach(el => el.classList.remove("pressed")); });
+let start = 0;
+try { const s = parseInt(localStorage.getItem("sofle-layer"), 10); if (s >= 0 && s < LAYERS.length) start = s; } catch (e) {}
+show(start);
+</script>
+</body>
+</html>
